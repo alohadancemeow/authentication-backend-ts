@@ -1,5 +1,7 @@
 import { Resolver, Query, Mutation, Arg, Ctx, ObjectType, Field } from 'type-graphql'
 import bcrypt from 'bcryptjs'
+import { randomBytes } from 'crypto'
+import sgMail, { MailDataRequired } from '@sendgrid/mail'
 
 import { User, UserModel } from '../entities/User'
 import { validateUsername, validateEmail, validatePassword } from '../utils/validate'
@@ -143,6 +145,99 @@ export class AuthResolvers {
       res.clearCookie(process.env.COOKIE_NAME!)
 
       return { message: 'See you later.' }
+
+    } catch (error) {
+      throw error
+    }
+  }
+
+  // # TODO: requestResetPassword
+  @Mutation(() => ResponseMessage, { nullable: true })
+  async requestResetPassword(@Arg('email') email: string): Promise<ResponseMessage | null> {
+    try {
+
+      //  check for email
+      if (!email) throw new Error("Email is required.");
+
+      const user = await UserModel.findOne({ email })
+      if (!user) throw new Error("Email not found.");
+
+      // create reset password token
+      const resetPasswordToken = randomBytes(16).toString('hex')
+      const resetPasswordTokenExpiry = Date.now() + 1000 * 60 * 30  // 30 minutes
+
+      // update user in database
+      const updatedUser = await UserModel.findOneAndUpdate(
+        { email },
+        { resetPasswordToken, resetPasswordTokenExpiry },
+        { new: true }
+      )
+
+      if (!updatedUser) throw new Error("Sorry, cannot proceed.");
+
+      // send link to user's mail with token
+      sgMail.setApiKey(process.env.SENDGRID_API_KEY!);
+      const message: MailDataRequired = {
+        to: email,
+        from: process.env.MY_EMAIL!, // Use the email address or domain you verified above
+        subject: 'Reset password',
+        text: 'and easy to do anywhere, even with Node.js',
+        html: `<div>
+          <p>Please click below link to reset your password.</p>
+          <a href='http://localhost:5000/resetToken=${resetPasswordToken}' target="blank">
+          Click to reset password
+          </a>
+        </div>`,
+      }
+
+      const response = await sgMail.send(message)
+      if (!response || response[0]?.statusCode !== 202) throw new Error("Sorry, cannot proceed.");
+
+      return { message: 'Please check your email to reset password.' }
+
+    } catch (error) {
+      throw error
+    }
+  }
+
+  // # TODO: resetPassword
+  @Mutation(() => ResponseMessage, { nullable: true })
+  async resetPassword(
+    @Arg('password') password: string,
+    @Arg('token') token: string
+  ): Promise<ResponseMessage | null> {
+    try {
+
+      //  check for password, token
+      if (!password) throw new Error("Password is required.");
+      if (!token) throw new Error("Sorry, cannot proceed.");
+
+      // check for user
+      const user = await UserModel.findOne({ resetPasswordToken: token })
+      if (!user) throw new Error("Sorry, cannot proceed.");
+      if (!user.resetPasswordTokenExpiry) throw new Error("Sorry, cannot proceed.");
+
+      // check if token is valid <= 30 minutes
+      const isTokenValid = Date.now() <= user.resetPasswordTokenExpiry
+      if (!isTokenValid) throw new Error("Sorry, cannot proceed.");
+
+      // hash password
+      const hashedPassword = await bcrypt.hash(password, 10)
+
+      // update user in database
+      const updatedUser = await UserModel.findOneAndUpdate(
+        { email: user.email },
+        {
+          password: hashedPassword,
+          resetPasswordToken: undefined,
+          resetPasswordTokenExpiry: undefined,
+        },
+        { new: true }
+      )
+
+      if (!updatedUser) throw new Error("Sorry, cannot proceed.");
+
+      return { message: 'Sucessfully reset password.' }
 
     } catch (error) {
       throw error

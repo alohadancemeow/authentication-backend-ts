@@ -17,7 +17,7 @@ export default async () => {
     context: ({ req, res }: AppContext) => {
 
       const token = req.cookies[process.env.COOKIE_NAME!]
-      console.log('token', token);
+      // console.log('token', token);
 
       if (token) {
         try {
@@ -29,7 +29,7 @@ export default async () => {
             exp: number
           } | null
 
-          console.log('decoded token', decodedToken);
+          // console.log('decoded token', decodedToken);
 
           if (decodedToken) {
             req.userId = decodedToken.userId
