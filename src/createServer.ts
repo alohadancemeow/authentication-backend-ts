@@ -1,62 +1,48 @@
-import { ApolloServer, gql } from 'apollo-server-express'
-import { UserModel } from './entities/User'
+import { ApolloServer } from 'apollo-server-express'
+import { buildSchema } from 'type-graphql'
 
-const typeDefs = gql`
-    type User {
-        id: String!
-        username: String!
-        email: String!
-        password: String!
-    }
+import { AuthResolvers } from './resolvers/AuthResolvers'
+import { AppContext } from './types'
+import { verifyToken } from './utils/tokenHandler'
 
-    type Query {
-        users: [User]!
-    }
+export default async () => {
+  const schema = await buildSchema({
+    resolvers: [AuthResolvers],
+    emitSchemaFile: { path: './src/schema.graphql' },
+    validate: false,
+  })
 
-    type Mutation {
-        createUser(
-                username: String!, 
-                email: String!, 
-                password:String!
-            ): User
-    }
-`
+  return new ApolloServer({
+    schema,
+    context: ({ req, res }: AppContext) => {
 
-//# User Model
-interface InputArgs {
-    username: string
-    email: string
-    password: string
-}
+      const token = req.cookies[process.env.COOKIE_NAME!]
+      console.log('token', token);
 
+      if (token) {
+        try {
 
-// # Resolvers
-const resolvers = {
-    Query: {
-        users: () => UserModel.find()
-    },
+          const decodedToken = verifyToken(token) as {
+            userId: string
+            tokenVersion: number
+            iat: number
+            exp: number
+          } | null
 
-    Mutation: {
-        createUser: async (_: any, args: InputArgs) => {
+          console.log('decoded token', decodedToken);
 
-            try {
-                const { username, email, password } = args
+          if (decodedToken) {
+            req.userId = decodedToken.userId
+            req.tokenVersion = decodedToken.tokenVersion
+          }
 
-                const newUser = await UserModel.create({
-                    username,
-                    password,
-                    email
-                })
-                return newUser
-
-            } catch (error) {
-                throw error
-            }
+        } catch (error) {
+          req.userId = undefined
+          req.tokenVersion = undefined
         }
-    }
-}
+      }
 
-
-export default () => {
-    return new ApolloServer({ typeDefs, resolvers })
+      return { req, res }
+    },
+  })
 }

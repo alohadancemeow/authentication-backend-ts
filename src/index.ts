@@ -1,6 +1,7 @@
 import express from "express"
 import mongoose from "mongoose"
 import { config } from 'dotenv'
+import cookieParser from 'cookie-parser'
 
 config()
 
@@ -25,7 +26,8 @@ const startServer = async () => {
         )
 
         const app = express()
-        const server = createServer()
+        app.use(cookieParser())
+        const server = await createServer()
 
         server.applyMiddleware({ app })
         app.listen({ port: PORT }, () =>
