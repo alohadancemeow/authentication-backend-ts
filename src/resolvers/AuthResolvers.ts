@@ -252,7 +252,7 @@ export class AuthResolvers {
     @Arg('newRoles', () => [String]) newRoles: RoleOptions[],
     @Arg('userId') userId: string,
     @Ctx() { req }: AppContext
-  ) {
+  ): Promise<User | null> {
 
     try {
       if (!req.userId) throw new Error("Please login.");
@@ -273,6 +273,34 @@ export class AuthResolvers {
       await user.save()
 
       return user
+
+    } catch (error) {
+      throw error
+    }
+  }
+
+  // # TODO: deleteUser
+  @Mutation(() => ResponseMessage, { nullable: true })
+  async deleteUser(
+    @Arg('userId') userId: string,
+    @Ctx() { req }: AppContext
+  ): Promise<ResponseMessage | null> {
+
+    try {
+      if (!req.userId) throw new Error("Please login.");
+
+      // check if user is admin
+      const admin = await isAuthenticated(req.userId, req.tokenVersion)
+
+      // check if user is supper admin
+      const isSupperAdmin = admin.roles.includes(RoleOptions.supperAdmin)
+      if (!isSupperAdmin) throw new Error("Not authorized.");
+
+      // query user (to be updated) from the database
+      const user = await UserModel.findByIdAndDelete(userId)
+      if (!user) throw new Error("Sorry, cannot proceed.");
+
+      return { message: `User id: ${userId} has deleted.` }
 
     } catch (error) {
       throw error
