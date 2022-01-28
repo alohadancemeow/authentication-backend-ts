@@ -34,10 +34,8 @@ export class AuthResolvers {
   async me(@Ctx() { req }: AppContext): Promise<User | null> {
     try {
 
-      if (!req.userId) throw new Error('Please log in to proceed.')
-
       // check if user authenticated
-      const user = await isAuthenticated(req.userId, req.tokenVersion)
+      const user = await isAuthenticated(req)
       return user
 
     } catch (error) {
@@ -255,13 +253,12 @@ export class AuthResolvers {
   ): Promise<User | null> {
 
     try {
-      if (!req.userId) throw new Error("Please login.");
 
       // check if user is admin
-      const admin = await isAuthenticated(req.userId, req.tokenVersion)
+      const admin = await isAuthenticated(req)
 
       // check if user is supper admin
-      const isSupperAdmin = admin.roles.includes(RoleOptions.supperAdmin)
+      const isSupperAdmin = admin && admin.roles.includes(RoleOptions.supperAdmin)
       if (!isSupperAdmin) throw new Error("Not authorized.");
 
       // query user (to be updated) from the database
@@ -287,13 +284,12 @@ export class AuthResolvers {
   ): Promise<ResponseMessage | null> {
 
     try {
-      if (!req.userId) throw new Error("Please login.");
 
       // check if user is admin
-      const admin = await isAuthenticated(req.userId, req.tokenVersion)
+      const admin = await isAuthenticated(req)
 
       // check if user is supper admin
-      const isSupperAdmin = admin.roles.includes(RoleOptions.supperAdmin)
+      const isSupperAdmin = admin && admin.roles.includes(RoleOptions.supperAdmin)
       if (!isSupperAdmin) throw new Error("Not authorized.");
 
       // query user (to be updated) from the database
