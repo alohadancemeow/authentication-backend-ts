@@ -18,7 +18,7 @@ export default async () => {
 
       const token = req.cookies[process.env.COOKIE_NAME!]
       // console.log('token', token);
-
+      
       if (token) {
         try {
 

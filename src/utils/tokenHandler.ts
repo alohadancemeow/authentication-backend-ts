@@ -8,7 +8,7 @@ export const createToken = (userId: string, tokenVersion: number) => {
 
 // HANDLE: send token
 export const sendToken = (res: Response, token: string) => {
-    return res.cookie(process.env.COOKIE_NAME!, token, { httpOnly: true })
+    return res.cookie(process.env.COOKIE_NAME!, token, { httpOnly: true, sameSite: 'none', secure: true })
 }
 
 // HANDLE: verify token

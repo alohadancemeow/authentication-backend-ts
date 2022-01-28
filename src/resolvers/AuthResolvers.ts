@@ -76,8 +76,8 @@ export class AuthResolvers {
 
       const hashedPassword = await bcrypt.hash(password, 10)
 
-      // create user
-      const newUser = await UserModel.create({
+      // create user (pick from user class)
+      const newUser = await UserModel.create<Pick<User, 'username' | 'email' | 'password'>>({
         username,
         email,
         password: hashedPassword,
@@ -118,6 +118,8 @@ export class AuthResolvers {
 
       // Create token
       const token = createToken(user.id, user.tokenVersion)
+      console.log(token);
+
 
       // Send token to the frontend
       sendToken(res, token)
@@ -142,7 +144,7 @@ export class AuthResolvers {
       await user.save()
 
       // clear cookie in browser
-      res.clearCookie(process.env.COOKIE_NAME!)
+      res.clearCookie(process.env.COOKIE_NAME!, { httpOnly: true, sameSite: 'none', secure: true })
 
       return { message: 'See you later.' }
 
