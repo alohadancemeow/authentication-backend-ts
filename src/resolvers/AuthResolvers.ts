@@ -6,7 +6,7 @@ import sgMail, { MailDataRequired } from '@sendgrid/mail'
 import { User, UserModel } from '../entities/User'
 import { validateUsername, validateEmail, validatePassword } from '../utils/validate'
 import { createToken, sendToken } from '../utils/tokenHandler'
-import { AppContext } from '../types'
+import { AppContext, RoleOptions } from '../types'
 import { isAuthenticated } from '../utils/authHandler'
 
 @ObjectType()
@@ -240,6 +240,39 @@ export class AuthResolvers {
       if (!updatedUser) throw new Error("Sorry, cannot proceed.");
 
       return { message: 'Sucessfully reset password.' }
+
+    } catch (error) {
+      throw error
+    }
+  }
+
+  // # TODO: updateRoles
+  @Mutation(() => User, { nullable: true })
+  async updateRoles(
+    @Arg('newRoles', () => [String]) newRoles: RoleOptions[],
+    @Arg('userId') userId: string,
+    @Ctx() { req }: AppContext
+  ) {
+
+    try {
+      if (!req.userId) throw new Error("Please login.");
+
+      // check if user is admin
+      const admin = await isAuthenticated(req.userId, req.tokenVersion)
+
+      // check if user is supper admin
+      const isSupperAdmin = admin.roles.includes(RoleOptions.supperAdmin)
+      if (!isSupperAdmin) throw new Error("Not authorized.");
+
+      // query user (to be updated) from the database
+      const user = await UserModel.findById(userId)
+      if (!user) throw new Error("User not found.");
+
+      // update roles
+      user.roles = newRoles
+      await user.save()
+
+      return user
 
     } catch (error) {
       throw error
