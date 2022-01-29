@@ -31,7 +31,7 @@ export default async () => {
             exp: number
           } | null
 
-          console.log('decoded token', decodedToken);
+          // console.log('decoded token', decodedToken);
 
           if (decodedToken) {
             req.userId = decodedToken.userId

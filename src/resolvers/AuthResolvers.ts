@@ -21,9 +21,20 @@ export class AuthResolvers {
 
   // # TODO: users
   @Query(() => [User], { nullable: true })
-  async users(): Promise<User[] | null> {
+  async users(@Ctx() { req }: AppContext): Promise<User[] | null> {
     try {
-      return UserModel.find()
+
+      // check if user authenticated
+      const user = await isAuthenticated(req)
+
+      // check if user is authorized (admin, supperadmin)
+      const isAuthorized = user && user.roles.includes(RoleOptions.admin) ||
+        user && user.roles.includes(RoleOptions.supperAdmin)
+
+      if (!isAuthorized) throw new Error("No Authorized.");
+
+      return UserModel.find().sort({ createdAt: 'desc' })
+
     } catch (error) {
       throw error
     }
