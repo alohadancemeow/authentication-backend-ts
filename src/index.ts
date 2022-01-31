@@ -1,6 +1,7 @@
 import express from "express"
 import mongoose from "mongoose"
 import { config } from 'dotenv'
+config()
 import cookieParser from 'cookie-parser'
 import { CorsOptions } from 'cors'
 
@@ -11,7 +12,6 @@ import { FacebookAuthenticate, GoogleAuthenticate } from "./passport/socialMedia
 // Use Apollo server
 import createServer from './createServer'
 
-config()
 
 // call passports
 passportFacebook()
@@ -20,7 +20,7 @@ passportGoogle()
 // set cors options
 const corsOptions: CorsOptions = {
     credentials: true,
-    origin: 'https://studio.apollographql.com'
+    origin: ['https://studio.apollographql.com', 'http://localhost:3000']
 }
 
 // From .env file

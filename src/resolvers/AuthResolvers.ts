@@ -127,7 +127,7 @@ export class AuthResolvers {
 
       // Create token
       const token = createToken(user.id, user.tokenVersion)
-      console.log(token);
+      // console.log(token);
 
 
       // Send token to the frontend
@@ -195,7 +195,7 @@ export class AuthResolvers {
         text: 'and easy to do anywhere, even with Node.js',
         html: `<div>
           <p>Please click below link to reset your password.</p>
-          <a href='http://localhost:5000/resetToken=${resetPasswordToken}' target="blank">
+          <a href='http://localhost:3000/?resetToken=${resetPasswordToken}' target="blank">
           Click to reset password
           </a>
         </div>`,

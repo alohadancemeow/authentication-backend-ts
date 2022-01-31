@@ -6,7 +6,7 @@ export enum RoleOptions {
     client = 'CLIENT',
     itemEditor = 'ITEMEDITOR',
     admin = 'ADMIN',
-    supperAdmin = 'SUPPERADMIN'
+    supperAdmin = 'SUPERADMIN'
 }
 
 export interface AppRequest extends Request {
