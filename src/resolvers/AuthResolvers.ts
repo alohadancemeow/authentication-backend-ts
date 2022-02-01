@@ -276,8 +276,11 @@ export class AuthResolvers {
       const user = await UserModel.findById(userId)
       if (!user) throw new Error("User not found.");
 
-      // update roles
-      user.roles = newRoles
+      // update roles (make sure all user must have client role)
+      !newRoles.includes(RoleOptions.client)
+        ? user.roles = [...newRoles, RoleOptions.client]
+        : user.roles = newRoles
+
       await user.save()
 
       return user
