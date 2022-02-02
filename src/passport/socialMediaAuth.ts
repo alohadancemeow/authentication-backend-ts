@@ -12,7 +12,7 @@ export const FacebookAuthenticate = async (req: AppRequest, res: Response) => {
 
     try {
 
-        let token
+        let token: string
 
         // query user from database by facebookId
         const user = await UserModel.findOne({ facebookId: id })
@@ -36,16 +36,16 @@ export const FacebookAuthenticate = async (req: AppRequest, res: Response) => {
             token = createToken(newUser.id, newUser.tokenVersion)
             sendToken(res, token)
 
-            // redirect --> homepage (frontend)
-            res.redirect('http://localhost:3000/home')
+            // redirect --> dashboard page (frontend)
+            res.redirect('http://localhost:3000/dashboard')
         } else {
             token = createToken(user.id, user.tokenVersion)
             sendToken(res, token)
-            res.redirect('http://localhost:3000/home')
+            res.redirect('http://localhost:3000/dashboard')
         }
     } catch (error) {
         // redirect --> error page
-        res.redirect('http://localhost:3000')
+        res.redirect('http://localhost:3000/undefined')
     }
 }
 
@@ -58,7 +58,7 @@ export const GoogleAuthenticate = async (req: AppRequest, res: Response) => {
 
     try {
 
-        let token
+        let token: string
 
         // query user from database by googelId
         const user = await UserModel.findOne({ googleId: id })
@@ -82,15 +82,15 @@ export const GoogleAuthenticate = async (req: AppRequest, res: Response) => {
             token = createToken(newUser.id, newUser.tokenVersion)
             sendToken(res, token)
 
-            // redirect --> homepage (frontend)
-            res.redirect('http://localhost:3000/home')
+            // redirect --> dashboard page (frontend)
+            res.redirect('http://localhost:3000/dashboard')
         } else {
             token = createToken(user.id, user.tokenVersion)
             sendToken(res, token)
-            res.redirect('http://localhost:3000/home')
+            res.redirect('http://localhost:3000/dashboard')
         }
     } catch (error) {
         // redirect --> error page
-        res.redirect('http://localhost:3000')
+        res.redirect('http://localhost:3000/undefined')
     }
 }
